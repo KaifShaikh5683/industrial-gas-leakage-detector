@@ -1,0 +1,142 @@
+
+#include <ESP8266WiFi.h>
+#include <WiFiClient.h>
+
+const long SERIAL_BAUD = 9600; 
+
+// Global variables to store received data
+int receivedGasRaw = 0;
+int receivedLeakStatus = 0;
+unsigned long lastUploadTime = 0; // Tracks last successful upload
+
+
+const char* ssid = "Moon";    
+const char* password = "56832211"; 
+const char* server = "api.thingspeak.com";
+const char* apiKey = "BWSJQHMWAB62I4J3";
+const long channelID = 3172093; 
+
+const int httpPort = 80;
+
+// FUNCTION PROTOTYPES
+void connectWiFi();
+void readSerialData();
+void uploadToThingSpeak();
+
+
+void setup() {
+  Serial.begin(115200); // PC Serial Monitor for Debugging
+  Serial.println("\n--- NodeMCU Wi-Fi Forwarder Ready ---");
+  
+  // Connect to Arduino UNO's SoftwareSerial
+  // This uses the NodeMCU's hardware Serial (RX/TX pins)
+  Serial.begin(SERIAL_BAUD); 
+
+  connectWiFi();
+}
+
+
+void loop() {
+  // 1. Check Wi-Fi connection
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Wi-Fi dropped. Attempting to reconnect...");
+    connectWiFi();
+  }
+  
+  // 2. Read data coming from Arduino (This is non-blocking)
+  readSerialData();
+  
+  // 3. Upload Data to ThingSpeak (only if new data received and interval passed)
+  
+  if (receivedGasRaw > 0 && millis() - lastUploadTime > 1000) { 
+    uploadToThingSpeak();
+    receivedGasRaw = 0; // Reset flag after upload
+    lastUploadTime = millis();
+  }
+  
+  delay(10); // Small delay
+}
+
+
+void connectWiFi() {
+  Serial.print("Connecting to Wi-Fi: ");
+  Serial.println(ssid);
+  
+  WiFi.begin(ssid, password);
+
+  unsigned long startAttemptTime = millis();
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 60000) { 
+    delay(500);
+    Serial.print(".");
+  }
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\nFATAL: Failed to connect to Wi-Fi.");
+  } else {
+    Serial.print("\nConnected successfully. IP address: ");
+    Serial.println(WiFi.localIP());
+  }
+}
+
+
+void readSerialData() {
+  // Check NodeMCU Hardware Serial for data coming from Arduino
+  while (Serial.available()) {
+    String data = Serial.readStringUntil('\n'); // Read until newline from Arduino
+    data.trim(); // Remove whitespace
+    
+    // Format: [RawReading],[StatusCode]
+    int commaIndex = data.indexOf(',');
+    
+    if (commaIndex != -1) {
+      // Parse Raw Reading (Field 1)
+      String rawString = data.substring(0, commaIndex);
+      receivedGasRaw = rawString.toInt();
+      
+      // Parse Status Code (Field 2)
+      String statusString = data.substring(commaIndex + 1);
+      receivedLeakStatus = statusString.toInt();
+      
+      Serial.print("Data Received from Arduino: Gas=");
+      Serial.print(receivedGasRaw);
+      Serial.print(", Status=");
+      Serial.println(receivedLeakStatus);
+    }
+  }
+}
+
+
+
+void uploadToThingSpeak() {
+  
+  if (WiFi.status() != WL_CONNECTED) {
+    return; // Can't upload if not connected
+  }
+  
+  WiFiClient client;
+  if (!client.connect(server, httpPort)) {
+    Serial.println("Upload failed: Could not connect to ThingSpeak server.");
+    return;
+  }
+  
+  Serial.println("--- Sending Data to ThingSpeak ---");
+  
+  // Construct the GET request URL
+  String data = "GET /update?api_key=";
+  data += apiKey;
+  data += "&field1="; // Field 1: Raw Gas Reading
+  data += receivedGasRaw;
+  data += "&field2="; // Field 2: Leak Status Code (1, 2, 3) -> Triggers Reacts/Emails
+  data += receivedLeakStatus;
+  data += " HTTP/1.1\r\nHost: api.thingspeak.com\r\nConnection: close\r\n\r\n";
+
+  client.print(data);
+  
+  // Read the response (entry ID) and close connection
+  while (client.connected() && client.available()) {
+    client.readStringUntil('\n');
+  }
+
+  client.stop();
+  Serial.println("Upload successful.");
+}

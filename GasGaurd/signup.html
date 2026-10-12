@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Gas Monitoring System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="card" style="max-width: 450px; margin: 50px auto; padding: 40px;">
+        <h1 style="font-size: 24px; margin-bottom: 10px;">Gas Monitoring System</h1>
+        <p style="color: #666; margin-bottom: 25px;">Create a secure account and link your hardware.</p>
+
+        <div style="text-align: left;">
+            <label for="sEmail" style="font-weight: bold; font-size: 14px;">User Email</label>
+            <input type="email" id="sEmail" placeholder="admin@example.com" 
+                   style="width: 100%; padding: 12px; margin: 8px 0 15px 0; border: 1px solid #ccc; border-radius: 8px;">
+
+            <label for="sPass" style="font-weight: bold; font-size: 14px;">Create Password</label>
+            <div style="position: relative;">
+                <input type="password" id="sPass" placeholder="6-8 chars (Upper, Lower, Num, Special)" 
+                       style="width: 100%; padding: 12px; margin: 8px 0 5px 0; border: 1px solid #ccc; border-radius: 8px;">
+                <i class="fa-solid fa-eye" id="toggleSPass" 
+                   style="position: absolute; right: 15px; top: 20px; cursor: pointer; color: #777;"></i>
+            </div>
+            <p style="font-size: 11px; color: #888; margin-bottom: 15px;">
+                Must be 6-8 characters with Uppercase, Lowercase, Number, and Special Char.
+            </p>
+
+            <label for="sApiKey" style="font-weight: bold; font-size: 14px;">ThingSpeak Read API Key</label>
+            <input type="text" id="sApiKey" placeholder="e.g. AAH0SJ1LPT8Z4GLN" 
+                   style="width: 100%; padding: 12px; margin: 8px 0 10px 0; border: 1px solid #ccc; border-radius: 8px;">
+        </div>
+
+        <p id="sErrorMessage" style="color: #d62020; font-size: 13px; margin: 10px 0; display: none; text-align: center; font-weight: bold;"></p>
+
+        <button id="signupBtn" class="theme-btn" style="width: 100%; padding: 14px; margin-top: 10px;">
+            Complete Registration
+        </button>
+
+        <p style="margin-top: 20px; font-size: 14px;">
+            Already have an account? <a href="index.html" style="font-weight: bold;">Login here</a>
+        </p>
+    </div>
+
+    <script type="module" src="auth.js"></script>
+
+</body>
+</html>

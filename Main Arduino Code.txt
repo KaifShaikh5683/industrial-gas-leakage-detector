@@ -1,0 +1,151 @@
+#include <SoftwareSerial.h>
+
+const int MQ5_GAS_PIN = A0;   
+const int LED_GREEN_PIN = 4;  
+const int LED_YELLOW_PIN = 5; 
+const int LED_RED_PIN = 6;    
+const int BUZZER_PIN = 7;     
+const int FAN_RELAY_PIN = 8;  // Added Relay on Pin 8
+
+const int NODE_TX_PIN = 3; 
+const int NODE_RX_PIN = 2; 
+SoftwareSerial NodeMCU(NODE_RX_PIN, NODE_TX_PIN); 
+const long SERIAL_BAUD = 9600; 
+
+int currentBaseline = 100; 
+const long SEND_INTERVAL = 15000; 
+
+int gasLeakStatusCode = 1; 
+int lastGasReading = 0;
+unsigned long lastSendTime = 0;
+
+void setup() {
+  Serial.begin(115200); 
+  NodeMCU.begin(SERIAL_BAUD); 
+
+  pinMode(LED_GREEN_PIN, OUTPUT);
+  pinMode(LED_YELLOW_PIN, OUTPUT);
+  pinMode(LED_RED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(FAN_RELAY_PIN, OUTPUT); // Set relay as output
+  
+  // Start with Fan OFF (Relays are usually OFF when HIGH)
+  digitalWrite(FAN_RELAY_PIN, HIGH); 
+  
+  allAlertsOff(); 
+  calibrateSensor(); 
+}
+
+void loop() {
+  lastGasReading = analogRead(MQ5_GAS_PIN);
+  
+  // --- FIXED THRESHOLD LOGIC ---
+  if (lastGasReading > 90) { 
+    handleHighAlert();   // Status 3: Values 91 and above
+  } 
+  else if (lastGasReading > 40) { 
+    handleMediumAlert(); // Status 2: Values 41 to 90
+  } 
+  else {
+    handleSafeStatus();  // Status 1: Values 0 to 40
+  }
+  
+  // Cloud Sync remains the same
+  if (millis() - lastSendTime >= SEND_INTERVAL) {
+    sendDataToNodeMCU(lastGasReading, gasLeakStatusCode);
+    lastSendTime = millis();
+  }
+
+  delay(200); 
+}
+void calibrateSensor() {
+  Serial.println("--- Starting Calibration ---");
+  long sumOfReadings = 0;
+  for (int i = 0; i < 50; i++) {
+    sumOfReadings += analogRead(MQ5_GAS_PIN);
+    digitalWrite(LED_GREEN_PIN, HIGH); delay(50);
+    digitalWrite(LED_GREEN_PIN, LOW); delay(50);
+  }
+  currentBaseline = sumOfReadings / 50;
+  if(currentBaseline < 10) currentBaseline = 100; 
+  Serial.print("Baseline Set: "); Serial.println(currentBaseline);
+}
+
+void handleSafeStatus() {
+  digitalWrite(LED_YELLOW_PIN, LOW);
+  digitalWrite(LED_RED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+  noTone(BUZZER_PIN);
+
+  // TURN FAN OFF
+  digitalWrite(FAN_RELAY_PIN, HIGH); 
+
+  digitalWrite(LED_GREEN_PIN, HIGH); 
+  gasLeakStatusCode = 1; 
+}
+
+void handleMediumAlert() {
+  digitalWrite(LED_GREEN_PIN, LOW); 
+  digitalWrite(LED_RED_PIN, LOW); 
+  digitalWrite(FAN_RELAY_PIN, LOW); // Fan stays ON
+
+  // Medium Alert: Intermittent Beeping & Yellow Flash
+  static unsigned long lastBeep = 0;
+  static bool state = false;
+  
+  if (millis() - lastBeep > 500) { // Beep every 500ms
+    state = !state;
+    if (state) {
+      tone(BUZZER_PIN, 1000); // 1kHz tone
+      digitalWrite(LED_YELLOW_PIN, HIGH);
+    } else {
+      noTone(BUZZER_PIN);
+      digitalWrite(LED_YELLOW_PIN, LOW);
+    }
+    lastBeep = millis();
+  }
+  
+  gasLeakStatusCode = 2; 
+}
+
+void handleHighAlert() {
+  digitalWrite(LED_GREEN_PIN, LOW);
+  digitalWrite(LED_YELLOW_PIN, LOW);
+  digitalWrite(FAN_RELAY_PIN, LOW); // Fan stays ON
+
+  // High Alert: Rapid Pulsing & Red Flash
+  static unsigned long lastFastBeep = 0;
+  static bool fastState = false;
+  
+  if (millis() - lastFastBeep > 150) { // Fast pulsing every 150ms
+    fastState = !fastState;
+    if (fastState) {
+      tone(BUZZER_PIN, 2500); // Higher pitch for urgency
+      digitalWrite(LED_RED_PIN, HIGH);
+    } else {
+      noTone(BUZZER_PIN);
+      digitalWrite(LED_RED_PIN, LOW);
+    }
+    lastFastBeep = millis();
+  }
+  
+  gasLeakStatusCode = 3; 
+}
+void allAlertsOff() {
+  digitalWrite(LED_GREEN_PIN, LOW);
+  digitalWrite(LED_YELLOW_PIN, LOW);
+  digitalWrite(LED_RED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
+  digitalWrite(FAN_RELAY_PIN, HIGH); // Safety off
+  noTone(BUZZER_PIN);
+}
+
+void sendDataToNodeMCU(int gasRaw, int status) {
+  NodeMCU.print(gasRaw);
+  NodeMCU.print(",");
+  NodeMCU.print(status);
+  NodeMCU.print("\n");
+
+  Serial.print("GAS Level: "); Serial.print(gasRaw);
+  Serial.print(" | Status: "); Serial.println(status);
+}

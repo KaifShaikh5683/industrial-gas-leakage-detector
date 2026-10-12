@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Gas Monitoring System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body id="dashBody">
+
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h2 style="margin: 0; font-size: 20px;">Gas Monitoring System <span style="color: #d62020;">Live</span></h2>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <button id="themeToggle" class="theme-btn">🌙 Theme</button>
+            <button id="logoutBtn" class="theme-btn" style="background: #d62020; color: white;">Logout</button>
+        </div>
+    </nav>
+   
+
+    <div style="text-align: center; margin-top: 20px;">
+        <span id="systemHealth" class="health">🔄 SYNCING...</span>
+    </div>
+
+    <h2 style="text-align:center; margin-top:30px;">Real-Time Gas Concentration</h2>
+    <div class="graph-container" id="chartContainer">
+        <p style="text-align: center; color: #888;">Loading personalized telemetry...</p>
+    </div>
+
+    <div class="card-container">
+        <div class="card">
+            <h3>Gas Level (ADC)</h3>
+            <p id="gasValue" class="card-value">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Safety Status</h3>
+            <p id="statusText" class="card-value">--</p>
+        </div>
+
+        <div class="card">
+            <h3>Recommended Action</h3>
+            <p id="solutionText" class="card-solution">Initializing system...</p>
+        </div>
+    </div>
+
+    <div class="alert-box" id="alertBox">
+        <h3 id="alertTitle">Emergency Alert</h3>
+        <p id="alertMessage">System monitoring is active.</p>
+    </div>
+     <h2 style="text-align:center; margin-top:50px;">Detailed History Log</h2>
+<div class="graph-container" style="overflow-x:auto;">
+    <table style="width:100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="background-color: #f2f2f2; border-bottom: 2px solid #ddd;">
+                <th style="padding: 12px;">Timestamp</th>
+                <th style="padding: 12px;">Gas Level (ADC)</th>
+                <th style="padding: 12px;">System Status</th>
+            </tr>
+        </thead>
+        <tbody id="historyTableBody">
+            </tbody>
+    </table>
+</div>
+
+    <p style="text-align:center; margin-top:15px; font-size: 13px;">
+        <strong>Last Cloud Sync:</strong> <span id="lastUpdated">--</span>
+    </p>
+
+    <audio id="alertSound">
+        <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+    </audio>
+
+    <script type="module" src="monitor.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,40 @@
+% 1. Configuration
+channelID = 3172093; 
+readKey = 'AAH0SJ1LPT8Z4GLN';
+alertApiKey = 'TAKwspir2Z/q6kZtE0A'; 
+alertUrl = "https://api.thingspeak.com/alerts/send";
+
+% 2. Read the latest status from Field 2
+status = thingSpeakRead(channelID, 'Fields', 2, 'ReadKey', readKey);
+
+% 3. Check for alerts (Handles both 2 and 3)
+if ~isempty(status)
+    options = weboptions("HeaderFields", ["ThingSpeak-Alerts-API-Key", alertApiKey]);
+    
+    if status == 3
+        % Logic for HIGH ALERT
+        mailSubject = '???? CRITICAL GAS LEAK: IMMEDIATE EVACUATION';
+        mailBody = 'CRITICAL gas leakage detected! High-level danger. Evacuate immediately.';
+        try
+            webwrite(alertUrl, "body", mailBody, "subject", mailSubject, options);
+            fprintf('CRITICAL Alert Sent (Status 3)\n');
+        catch ME
+            fprintf('Error sending High Alert: %s\n', ME.message);
+        end
+        
+    elseif status == 2
+        % Logic for MEDIUM ALERT
+        mailSubject = '⚠️ MEDIUM GAS LEAK ALERT';
+        mailBody = 'Medium level gas leakage detected. Please investigate the area immediately.';
+        try
+            webwrite(alertUrl, "body", mailBody, "subject", mailSubject, options);
+            fprintf('Medium Alert Sent (Status 2)\n');
+        catch ME
+            fprintf('Error sending Medium Alert: %s\n', ME.message);
+        end
+    else
+        fprintf('Status is %d (Safe). No email sent.\n', status);
+    end
+else
+    fprintf('No data found in Field 2.\n');
+end

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Gas Monitoring System</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="card" style="max-width: 400px; margin: 80px auto; padding: 40px;">
+        <h1 style="font-size: 24px; margin-bottom: 10px;">Gas Monitoring System</h1>
+        <p style="color: #666; margin-bottom: 25px;">Enter credentials to access live gas telemetry.</p>
+
+        <div style="text-align: left;">
+            <label for="email" style="font-weight: bold; font-size: 14px;">Email Address</label>
+            <input type="email" id="email" placeholder="name@company.com" 
+                   style="width: 100%; padding: 12px; margin: 8px 0 20px 0; border: 1px solid #ccc; border-radius: 8px;">
+
+            <label for="password" style="font-weight: bold; font-size: 14px;">Password</label>
+            <div style="position: relative;">
+                <input type="password" id="password" placeholder="••••••••" 
+                       style="width: 100%; padding: 12px; margin: 8px 0 10px 0; border: 1px solid #ccc; border-radius: 8px;">
+                <i class="fa-solid fa-eye" id="togglePassword" 
+                   style="position: absolute; right: 15px; top: 20px; cursor: pointer; color: #777;"></i>
+            </div>
+        </div>
+
+        <p id="errorMessage" style="color: #d62020; font-size: 14px; margin: 10px 0; display: none; text-align: center; font-weight: bold;"></p>
+
+        <button id="loginBtn" class="theme-btn" style="width: 100%; padding: 14px; margin-top: 10px;">
+            Verify & Enter Dashboard
+        </button>
+
+        <p style="margin-top: 20px; font-size: 14px;">
+            <a href="#" id="forgotBtn" style="color: #d62020; text-decoration: none; font-weight: bold;">Forgot Password?</a>
+        </p>
+
+        <hr style="margin: 25px 0; border: 0; border-top: 1px solid #eee;">
+
+        <p style="font-size: 14px;">
+            New Hardware Unit? <a href="signup.html" style="font-weight: bold;">Register Here</a>
+        </p>
+    </div>
+
+    <script type="module" src="auth.js"></script>
+
+</body>
+</html>
